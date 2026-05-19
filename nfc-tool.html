@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0a0a" />
+<title>NFC // TERMINAL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --panel: #131313;
+    --panel-2: #1a1a1a;
+    --line: #262626;
+    --line-2: #333;
+    --text: #e8e8e8;
+    --muted: #707070;
+    --accent: #ffb000;
+    --accent-dim: #5a3f00;
+    --ok: #4ade80;
+    --err: #ef4444;
+    --info: #60a5fa;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    padding: 16px;
+    padding-bottom: 32px;
+    max-width: 720px;
+    margin: 0 auto;
+    background-image:
+      radial-gradient(circle at 50% 0%, rgba(255,176,0,0.06) 0%, transparent 50%),
+      linear-gradient(transparent 95%, rgba(255,255,255,0.02) 95%);
+    background-size: 100% 100%, 100% 4px;
+    background-attachment: fixed;
+  }
+
+  header {
+    border: 1px solid var(--line-2);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--panel);
+  }
+
+  .logo {
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-size: 15px;
+  }
+  .logo .dot {
+    color: var(--accent);
+    animation: blink 1.4s steps(2) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .status-pill {
+    font-size: 11px;
+    padding: 3px 8px;
+    border: 1px solid var(--line-2);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .status-pill.ok { color: var(--ok); border-color: rgba(74,222,128,0.4); }
+  .status-pill.err { color: var(--err); border-color: rgba(239,68,68,0.4); }
+
+  .tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border: 1px solid var(--line-2);
+    margin-bottom: 16px;
+  }
+  .tab {
+    background: var(--panel);
+    border: none;
+    color: var(--muted);
+    padding: 12px 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: color 0.15s, background 0.15s;
+    border-right: 1px solid var(--line-2);
+  }
+  .tab:last-child { border-right: none; }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    background: var(--accent);
+    color: #000;
+    font-weight: 700;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line-2);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .panel-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-title::before {
+    content: "▸";
+    color: var(--accent);
+  }
+
+  button.action {
+    width: 100%;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    padding: 14px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: filter 0.15s;
+  }
+  button.action:hover:not(:disabled) { filter: brightness(1.1); }
+  button.action:active:not(:disabled) { filter: brightness(0.9); }
+  button.action:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.action.secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--line-2);
+  }
+  button.action.danger { background: var(--err); color: #fff; }
+
+  .btn-row { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+
+  label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 6px;
+    margin-top: 12px;
+  }
+  label:first-child { margin-top: 0; }
+
+  select, input, textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--line-2);
+    color: var(--text);
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    border-radius: 0;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  select:focus, input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  select {
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                      linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 18px) center, calc(100% - 12px) center;
+    background-size: 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 32px;
+  }
+  textarea { resize: vertical; min-height: 70px; font-family: inherit; }
+
+  .record-card {
+    border: 1px solid var(--line-2);
+    padding: 12px;
+    margin-bottom: 10px;
+    background: var(--panel-2);
+    position: relative;
+  }
+  .record-card .rm-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: 1px solid var(--line-2);
+    color: var(--muted);
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1;
+  }
+  .record-card .rm-btn:hover { color: var(--err); border-color: var(--err); }
+
+  .record-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .record-header .idx {
+    background: var(--accent);
+    color: #000;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 11px;
+  }
+
+  .add-record {
+    background: transparent;
+    border: 1px dashed var(--line-2);
+    color: var(--muted);
+    padding: 10px;
+    width: 100%;
+    font-family: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .add-record:hover { color: var(--accent); border-color: var(--accent); }
+
+  .log {
+    background: #000;
+    border: 1px solid var(--line-2);
+    padding: 12px;
+    font-size: 12px;
+    max-height: 240px;
+    overflow-y: auto;
+    line-height: 1.6;
+  }
+  .log-line { display: flex; gap: 10px; padding: 2px 0; }
+  .log-time { color: var(--muted); flex-shrink: 0; }
+  .log-msg { word-break: break-word; }
+  .log-line.ok .log-msg { color: var(--ok); }
+  .log-line.err .log-msg { color: var(--err); }
+  .log-line.info .log-msg { color: var(--info); }
+  .log-line.accent .log-msg { color: var(--accent); }
+
+  .read-result {
+    background: var(--panel-2);
+    border: 1px solid var(--line-2);
+    padding: 12px;
+    margin-bottom: 10px;
+  }
+  .read-result .field {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    gap: 8px;
+    padding: 4px 0;
+    font-size: 12px;
+    border-bottom: 1px dotted var(--line);
+  }
+  .read-result .field:last-child { border-bottom: none; }
+  .read-result .field .k {
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 11px;
+  }
+  .read-result .field .v {
+    color: var(--text);
+    word-break: break-all;
+    white-space: pre-wrap;
+  }
+
+  .warning {
+    border: 1px solid var(--err);
+    background: rgba(239,68,68,0.08);
+    padding: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+  .warning strong { color: var(--err); display: block; margin-bottom: 6px; letter-spacing: 0.05em; }
+
+  .info-bar {
+    font-size: 11px;
+    color: var(--muted);
+    padding: 8px 12px;
+    background: var(--panel-2);
+    border-left: 2px solid var(--accent);
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+
+  .scan-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px;
+    background: var(--panel-2);
+    border: 1px solid var(--accent);
+    margin-bottom: 12px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .scan-indicator .pulse {
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 1.2s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.6); }
+  }
+
+  .hidden { display: none !important; }
+
+  footer {
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 24px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* Scrollbar for log */
+  .log::-webkit-scrollbar { width: 6px; }
+  .log::-webkit-scrollbar-track { background: transparent; }
+  .log::-webkit-scrollbar-thumb { background: var(--line-2); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">NFC<span class="dot">_</span>TERMINAL</div>
+  <div class="status-pill" id="capStatus">CHECKING…</div>
+</header>
+
+<div id="unsupportedBanner" class="warning hidden">
+  <strong>WEB NFC UNAVAILABLE</strong>
+  This browser/device does not support the Web NFC API. Requirements:
+  Android device, Chrome or Edge (v89+), HTTPS connection. iOS Safari is not supported.
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="read">READ</button>
+  <button class="tab" data-tab="write">WRITE</button>
+  <button class="tab" data-tab="erase">ERASE</button>
+</div>
+
+<!-- READ TAB -->
+<section id="tab-read">
+  <div class="panel">
+    <div class="panel-title">Scan tag</div>
+    <div class="info-bar">Tap "Start scan", then hold an NFC tag to the back of the device.</div>
+    <div id="readScanIndicator" class="scan-indicator hidden">
+      <div class="pulse"></div>
+      <span>Awaiting tag…</span>
+    </div>
+    <div class="btn-row">
+      <button class="action" id="btnReadStart">Start scan</button>
+      <button class="action secondary" id="btnReadStop" disabled>Stop scan</button>
+    </div>
+  </div>
+
+  <div class="panel" id="readResultsPanel">
+    <div class="panel-title">Last read</div>
+    <div id="readResults" style="color: var(--muted); font-size: 12px;">No reads yet.</div>
+  </div>
+</section>
+
+<!-- WRITE TAB -->
+<section id="tab-write" class="hidden">
+  <div class="panel">
+    <div class="panel-title">Records to write</div>
+    <div class="info-bar">Build records, then tap "Write" and hold a writable NFC tag to the device.</div>
+    <div id="recordsContainer"></div>
+    <button class="add-record" id="btnAddRecord">+ Add record</button>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Execute</div>
+    <div id="writeScanIndicator" class="scan-indicator hidden">
+      <div class="pulse"></div>
+      <span>Hold tag to write…</span>
+    </div>
+    <div class="btn-row">
+      <button class="action" id="btnWrite">Write to tag</button>
+      <button class="action secondary" id="btnWriteCancel" disabled>Cancel</button>
+    </div>
+  </div>
+</section>
+
+<!-- ERASE TAB -->
+<section id="tab-erase" class="hidden">
+  <div class="panel">
+    <div class="panel-title">Erase tag</div>
+    <div class="info-bar">
+      Overwrites the tag with an empty NDEF message, effectively clearing its data.
+      Note: this does NOT work on tags that have been permanently locked (read-only).
+    </div>
+    <div id="eraseScanIndicator" class="scan-indicator hidden">
+      <div class="pulse"></div>
+      <span>Hold tag to erase…</span>
+    </div>
+    <div class="btn-row">
+      <button class="action danger" id="btnErase">Erase tag</button>
+      <button class="action secondary" id="btnEraseCancel" disabled>Cancel</button>
+    </div>
+  </div>
+</section>
+
+<div class="panel">
+  <div class="panel-title">Console</div>
+  <div class="log" id="log"></div>
+  <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+    <button class="action secondary" id="btnClearLog" style="width:auto; padding:6px 12px; font-size:11px;">Clear log</button>
+  </div>
+</div>
+
+<footer>NDEF READ / WRITE / ERASE · WEB NFC API</footer>
+
+<script>
+(() => {
+  'use strict';
+
+  // ----- State -----
+  let readAbortCtrl = null;
+  let writeAbortCtrl = null;
+  let eraseAbortCtrl = null;
+  let records = [{ type: 'text', value: '', lang: 'en', mimeType: '' }];
+
+  // ----- DOM helpers -----
+  const $ = (id) => document.getElementById(id);
+  const tabs = document.querySelectorAll('.tab');
+  const sections = {
+    read: $('tab-read'),
+    write: $('tab-write'),
+    erase: $('tab-erase'),
+  };
+
+  // ----- Logging -----
+  function log(msg, type = '') {
+    const el = $('log');
+    const line = document.createElement('div');
+    line.className = `log-line ${type}`;
+    const t = new Date().toTimeString().slice(0, 8);
+    line.innerHTML = `<span class="log-time">${t}</span><span class="log-msg"></span>`;
+    line.querySelector('.log-msg').textContent = msg;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  }
+
+  $('btnClearLog').addEventListener('click', () => {
+    $('log').innerHTML = '';
+    log('Console cleared.', 'info');
+  });
+
+  // ----- Tabs -----
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      Object.values(sections).forEach(s => s.classList.add('hidden'));
+      sections[btn.dataset.tab].classList.remove('hidden');
+    });
+  });
+
+  // ----- Capability check -----
+  function checkCapability() {
+    const supported = ('NDEFReader' in window);
+    const secure = window.isSecureContext;
+    const pill = $('capStatus');
+
+    if (!supported) {
+      pill.textContent = 'UNSUPPORTED';
+      pill.classList.add('err');
+      $('unsupportedBanner').classList.remove('hidden');
+      log('Web NFC API not available in this browser.', 'err');
+      // Disable all action buttons
+      ['btnReadStart','btnWrite','btnErase'].forEach(id => $(id).disabled = true);
+      return false;
+    }
+    if (!secure) {
+      pill.textContent = 'INSECURE CONTEXT';
+      pill.classList.add('err');
+      $('unsupportedBanner').classList.remove('hidden');
+      $('unsupportedBanner').querySelector('strong').textContent = 'HTTPS REQUIRED';
+      $('unsupportedBanner').innerHTML = '<strong>HTTPS REQUIRED</strong>Web NFC only works over HTTPS or localhost.';
+      log('Page not served over a secure context.', 'err');
+      ['btnReadStart','btnWrite','btnErase'].forEach(id => $(id).disabled = true);
+      return false;
+    }
+    pill.textContent = 'READY';
+    pill.classList.add('ok');
+    log('Web NFC API detected. Ready.', 'ok');
+    return true;
+  }
+
+  // ----- Decoding helpers -----
+  function decodeRecord(record) {
+    // record.data is a DataView
+    let decoded = { raw: null, error: null };
+    try {
+      switch (record.recordType) {
+        case 'text': {
+          const decoder = new TextDecoder(record.encoding || 'utf-8');
+          decoded.raw = decoder.decode(record.data);
+          break;
+        }
+        case 'url':
+        case 'absolute-url': {
+          decoded.raw = new TextDecoder().decode(record.data);
+          break;
+        }
+        case 'mime': {
+          // Try text decode first; fall back to hex
+          try {
+            decoded.raw = new TextDecoder().decode(record.data);
+          } catch {
+            decoded.raw = bytesToHex(new Uint8Array(record.data.buffer));
+          }
+          break;
+        }
+        case 'empty':
+          decoded.raw = '(empty record)';
+          break;
+        default:
+          decoded.raw = bytesToHex(new Uint8Array(record.data.buffer));
+      }
+    } catch (e) {
+      decoded.error = e.message;
+    }
+    return decoded;
+  }
+
+  function bytesToHex(bytes) {
+    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ');
+  }
+
+  // ----- READ -----
+  $('btnReadStart').addEventListener('click', startReading);
+  $('btnReadStop').addEventListener('click', stopReading);
+
+  async function startReading() {
+    if (readAbortCtrl) return;
+    try {
+      const ndef = new NDEFReader();
+      readAbortCtrl = new AbortController();
+      log('Requesting NFC permission and starting scan…', 'info');
+
+      await ndef.scan({ signal: readAbortCtrl.signal });
+
+      log('Scan active. Present a tag.', 'accent');
+      $('btnReadStart').disabled = true;
+      $('btnReadStop').disabled = false;
+      $('readScanIndicator').classList.remove('hidden');
+
+      ndef.addEventListener('readingerror', () => {
+        log('Read error — tag may be unreadable or moved away too quickly.', 'err');
+      });
+
+      ndef.addEventListener('reading', ({ message, serialNumber }) => {
+        log(`Tag detected. Serial: ${serialNumber || '(none)'}`, 'ok');
+        renderRead(message, serialNumber);
+      });
+    } catch (err) {
+      handleNfcError(err, 'read');
+      cleanupRead();
+    }
+  }
+
+  function stopReading() {
+    if (readAbortCtrl) {
+      readAbortCtrl.abort();
+      log('Read scan stopped.', 'info');
+    }
+    cleanupRead();
+  }
+
+  function cleanupRead() {
+    readAbortCtrl = null;
+    $('btnReadStart').disabled = false;
+    $('btnReadStop').disabled = true;
+    $('readScanIndicator').classList.add('hidden');
+  }
+
+  function renderRead(message, serial) {
+    const container = $('readResults');
+    container.innerHTML = '';
+    container.style.color = '';
+
+    const meta = document.createElement('div');
+    meta.className = 'read-result';
+    meta.innerHTML = `
+      <div class="field"><span class="k">Timestamp</span><span class="v">${new Date().toLocaleString()}</span></div>
+      <div class="field"><span class="k">Serial</span><span class="v">${escapeHtml(serial || '(none)')}</span></div>
+      <div class="field"><span class="k">Records</span><span class="v">${message.records.length}</span></div>
+    `;
+    container.appendChild(meta);
+
+    if (message.records.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'read-result';
+      empty.innerHTML = `<div class="field"><span class="k">Status</span><span class="v">Tag is empty.</span></div>`;
+      container.appendChild(empty);
+      return;
+    }
+
+    message.records.forEach((rec, i) => {
+      const decoded = decodeRecord(rec);
+      const card = document.createElement('div');
+      card.className = 'read-result';
+      const fields = [
+        ['Index', `#${i + 1}`],
+        ['Type', rec.recordType],
+      ];
+      if (rec.mediaType) fields.push(['Media Type', rec.mediaType]);
+      if (rec.encoding) fields.push(['Encoding', rec.encoding]);
+      if (rec.lang) fields.push(['Language', rec.lang]);
+      if (rec.id) fields.push(['ID', rec.id]);
+      fields.push(['Data', decoded.error ? `(error: ${decoded.error})` : decoded.raw]);
+
+      card.innerHTML = fields.map(([k, v]) =>
+        `<div class="field"><span class="k">${k}</span><span class="v">${escapeHtml(String(v))}</span></div>`
+      ).join('');
+      container.appendChild(card);
+    });
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
+  }
+
+  // ----- WRITE: record builder UI -----
+  function renderRecords() {
+    const c = $('recordsContainer');
+    c.innerHTML = '';
+    records.forEach((rec, idx) => {
+      const card = document.createElement('div');
+      card.className = 'record-card';
+      card.innerHTML = `
+        <div class="record-header">
+          <span class="idx">${idx + 1}</span>
+          <span>RECORD</span>
+        </div>
+        ${records.length > 1 ? `<button class="rm-btn" data-rm="${idx}" aria-label="Remove">✕</button>` : ''}
+        <label>Type</label>
+        <select data-field="type" data-idx="${idx}">
+          <option value="text" ${rec.type==='text'?'selected':''}>Text</option>
+          <option value="url" ${rec.type==='url'?'selected':''}>URL</option>
+          <option value="mime" ${rec.type==='mime'?'selected':''}>MIME (custom)</option>
+          <option value="vcard" ${rec.type==='vcard'?'selected':''}>vCard (contact)</option>
+          <option value="wifi" ${rec.type==='wifi'?'selected':''}>WiFi config</option>
+          <option value="poster" ${rec.type==='poster'?'selected':''}>Smart Poster</option>
+        </select>
+        ${rec.type === 'text' ? `
+          <label>Language code (e.g. en, es, fr-CA)</label>
+          <input type="text" data-field="lang" data-idx="${idx}" value="${escapeHtml(rec.lang||'en')}" maxlength="8" />
+          <label>Text content</label>
+          <textarea data-field="value" data-idx="${idx}" placeholder="Enter text…">${escapeHtml(rec.value||'')}</textarea>
+        ` : ''}
+        ${rec.type === 'url' ? `
+          <label>URL (must include https:// or http://)</label>
+          <input type="url" data-field="value" data-idx="${idx}" value="${escapeHtml(rec.value||'')}" placeholder="https://example.com" />
+        ` : ''}
+        ${rec.type === 'mime' ? `
+          <label>MIME type (e.g. application/json, text/vcard)</label>
+          <input type="text" data-field="mimeType" data-idx="${idx}" value="${escapeHtml(rec.mimeType||'')}" placeholder="application/json" />
+          <label>Payload (text)</label>
+          <textarea data-field="value" data-idx="${idx}" placeholder="Payload…">${escapeHtml(rec.value||'')}</textarea>
+        ` : ''}
+        ${rec.type === 'vcard' ? `
+          <label>Full name *</label>
+          <input type="text" data-field="vcName" data-idx="${idx}" value="${escapeHtml(rec.vcName||'')}" placeholder="Jane Doe" />
+          <label>Phone</label>
+          <input type="tel" data-field="vcPhone" data-idx="${idx}" value="${escapeHtml(rec.vcPhone||'')}" placeholder="+1 555 123 4567" />
+          <label>Email</label>
+          <input type="email" data-field="vcEmail" data-idx="${idx}" value="${escapeHtml(rec.vcEmail||'')}" placeholder="jane@example.com" />
+          <label>Organization</label>
+          <input type="text" data-field="vcOrg" data-idx="${idx}" value="${escapeHtml(rec.vcOrg||'')}" placeholder="Acme Inc." />
+          <label>Title</label>
+          <input type="text" data-field="vcTitle" data-idx="${idx}" value="${escapeHtml(rec.vcTitle||'')}" placeholder="Engineer" />
+          <label>Website</label>
+          <input type="url" data-field="vcUrl" data-idx="${idx}" value="${escapeHtml(rec.vcUrl||'')}" placeholder="https://…" />
+          <label>Note</label>
+          <textarea data-field="vcNote" data-idx="${idx}" placeholder="Optional note…">${escapeHtml(rec.vcNote||'')}</textarea>
+        ` : ''}
+        ${rec.type === 'wifi' ? `
+          <label>SSID (network name) *</label>
+          <input type="text" data-field="wifiSsid" data-idx="${idx}" value="${escapeHtml(rec.wifiSsid||'')}" placeholder="MyNetwork" maxlength="32" />
+          <label>Authentication</label>
+          <select data-field="wifiAuth" data-idx="${idx}">
+            <option value="WPA2" ${(rec.wifiAuth||'WPA2')==='WPA2'?'selected':''}>WPA2-Personal</option>
+            <option value="WPA_WPA2" ${rec.wifiAuth==='WPA_WPA2'?'selected':''}>WPA/WPA2-Personal (mixed)</option>
+            <option value="WPA" ${rec.wifiAuth==='WPA'?'selected':''}>WPA-Personal</option>
+            <option value="OPEN" ${rec.wifiAuth==='OPEN'?'selected':''}>Open (no password)</option>
+          </select>
+          ${(rec.wifiAuth||'WPA2') !== 'OPEN' ? `
+            <label>Password</label>
+            <input type="text" data-field="wifiPass" data-idx="${idx}" value="${escapeHtml(rec.wifiPass||'')}" placeholder="••••••••" autocomplete="off" />
+          ` : ''}
+          <label style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-size:12px;color:var(--text);">
+            <input type="checkbox" data-field="wifiHidden" data-idx="${idx}" ${rec.wifiHidden?'checked':''} style="width:auto;margin:0;" />
+            Hidden network
+          </label>
+        ` : ''}
+        ${rec.type === 'poster' ? `
+          <label>Target URL (http(s)://…)</label>
+          <input type="url" data-field="spUrl" data-idx="${idx}" value="${escapeHtml(rec.spUrl||'')}" placeholder="https://example.com" />
+          <label>Title</label>
+          <input type="text" data-field="spTitle" data-idx="${idx}" value="${escapeHtml(rec.spTitle||'')}" placeholder="Example Site" />
+          <label>Title language code</label>
+          <input type="text" data-field="spLang" data-idx="${idx}" value="${escapeHtml(rec.spLang||'en')}" maxlength="8" />
+        ` : ''}
+      `;
+      c.appendChild(card);
+    });
+
+    // Bind listeners
+    c.querySelectorAll('[data-field]').forEach(el => {
+      el.addEventListener('input', onRecordChange);
+      el.addEventListener('change', onRecordChange);
+    });
+    c.querySelectorAll('[data-rm]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        records.splice(parseInt(btn.dataset.rm), 1);
+        renderRecords();
+      });
+    });
+  }
+
+  function onRecordChange(e) {
+    const idx = parseInt(e.target.dataset.idx);
+    const field = e.target.dataset.field;
+    const val = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    records[idx][field] = val;
+    // Re-render on type change or wifi auth change (to toggle password field)
+    if (field === 'type' || field === 'wifiAuth') renderRecords();
+  }
+
+  $('btnAddRecord').addEventListener('click', () => {
+    if (records.length >= 8) {
+      log('Maximum of 8 records per tag (UI limit; actual tag capacity may be lower).', 'err');
+      return;
+    }
+    records.push({ type: 'text', value: '', lang: 'en', mimeType: '' });
+    renderRecords();
+  });
+
+  // ----- Builders for special record types -----
+  function buildVCard(r) {
+    // vCard 3.0 — best Android Contacts compatibility
+    // Escape per RFC 2426: \ , ; and newlines
+    const esc = (s) => String(s || '').replace(/\\/g, '\\\\').replace(/\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
+    const lines = ['BEGIN:VCARD', 'VERSION:3.0'];
+    lines.push(`FN:${esc(r.vcName)}`);
+    // N: last;first;middle;prefix;suffix — split on first space for a best-guess
+    const parts = String(r.vcName).trim().split(/\s+/);
+    const first = parts.shift() || '';
+    const last = parts.join(' ') || '';
+    lines.push(`N:${esc(last)};${esc(first)};;;`);
+    if (r.vcPhone) lines.push(`TEL;TYPE=CELL:${esc(r.vcPhone)}`);
+    if (r.vcEmail) lines.push(`EMAIL;TYPE=INTERNET:${esc(r.vcEmail)}`);
+    if (r.vcOrg)   lines.push(`ORG:${esc(r.vcOrg)}`);
+    if (r.vcTitle) lines.push(`TITLE:${esc(r.vcTitle)}`);
+    if (r.vcUrl)   lines.push(`URL:${esc(r.vcUrl)}`);
+    if (r.vcNote)  lines.push(`NOTE:${esc(r.vcNote)}`);
+    lines.push('END:VCARD');
+    return lines.join('\r\n');
+  }
+
+  // Build a Wi-Fi Simple Configuration (WSC) payload — Android-readable WiFi tag
+  // Reference: Wi-Fi Alliance Wi-Fi Simple Configuration Technical Spec
+  function buildWifiWSC(ssid, password, authType) {
+    // Auth + encryption codes
+    const AUTH = {
+      OPEN:     { auth: 0x0001, enc: 0x0001 }, // Open / None
+      WPA:      { auth: 0x0002, enc: 0x0004 }, // WPA-Personal / TKIP
+      WPA2:     { auth: 0x0020, enc: 0x0008 }, // WPA2-Personal / AES
+      WPA_WPA2: { auth: 0x0022, enc: 0x000C }, // Mixed / TKIP+AES
+    };
+    const codes = AUTH[authType] || AUTH.WPA2;
+
+    const ssidBytes = new TextEncoder().encode(ssid);
+    const passBytes = authType === 'OPEN' ? new Uint8Array(0) : new TextEncoder().encode(password);
+
+    // TLV helper: 2-byte type, 2-byte length (big-endian), then value
+    const tlv = (type, valueBytes) => {
+      const out = new Uint8Array(4 + valueBytes.length);
+      out[0] = (type >> 8) & 0xff;
+      out[1] = type & 0xff;
+      out[2] = (valueBytes.length >> 8) & 0xff;
+      out[3] = valueBytes.length & 0xff;
+      out.set(valueBytes, 4);
+      return out;
+    };
+    const u16 = (v) => new Uint8Array([(v >> 8) & 0xff, v & 0xff]);
+
+    // Credential attribute children
+    const networkIndex = tlv(0x1026, new Uint8Array([1]));        // Network Index
+    const ssidAttr     = tlv(0x1045, ssidBytes);                  // SSID
+    const authAttr     = tlv(0x1003, u16(codes.auth));            // Authentication Type
+    const encAttr      = tlv(0x100F, u16(codes.enc));             // Encryption Type
+    const keyAttr      = tlv(0x1027, passBytes);                  // Network Key (empty for open)
+    const macAttr      = tlv(0x1020, new Uint8Array(6));          // MAC Address (00:00:00:00:00:00)
+
+    // Concat into credential body
+    const credBody = concatBytes([networkIndex, ssidAttr, authAttr, encAttr, keyAttr, macAttr]);
+    // Wrap in Credential attribute (0x100E)
+    return tlv(0x100E, credBody);
+  }
+
+  function concatBytes(arrays) {
+    let total = 0;
+    arrays.forEach(a => total += a.length);
+    const out = new Uint8Array(total);
+    let off = 0;
+    arrays.forEach(a => { out.set(a, off); off += a.length; });
+    return out;
+  }
+
+  // ----- WRITE: execute -----
+  $('btnWrite').addEventListener('click', writeTag);
+  $('btnWriteCancel').addEventListener('click', cancelWrite);
+
+  async function writeTag() {
+    // Validate
+    const ndefRecords = [];
+    for (let i = 0; i < records.length; i++) {
+      const r = records[i];
+      if (r.type === 'text') {
+        if (!r.value) { log(`Record #${i+1}: text is empty.`, 'err'); return; }
+        ndefRecords.push({ recordType: 'text', data: r.value, lang: r.lang || 'en' });
+      } else if (r.type === 'url') {
+        if (!r.value) { log(`Record #${i+1}: URL is empty.`, 'err'); return; }
+        if (!/^https?:\/\//i.test(r.value)) {
+          log(`Record #${i+1}: URL must start with http:// or https://`, 'err');
+          return;
+        }
+        ndefRecords.push({ recordType: 'url', data: r.value });
+      } else if (r.type === 'mime') {
+        if (!r.mimeType) { log(`Record #${i+1}: MIME type is empty.`, 'err'); return; }
+        if (!r.value) { log(`Record #${i+1}: payload is empty.`, 'err'); return; }
+        if (!/^[\w.+-]+\/[\w.+-]+$/.test(r.mimeType)) {
+          log(`Record #${i+1}: MIME type format looks invalid.`, 'err');
+          return;
+        }
+        ndefRecords.push({
+          recordType: 'mime',
+          mediaType: r.mimeType,
+          data: new TextEncoder().encode(r.value),
+        });
+      } else if (r.type === 'vcard') {
+        if (!r.vcName) { log(`Record #${i+1}: vCard name is required.`, 'err'); return; }
+        const vcard = buildVCard(r);
+        ndefRecords.push({
+          recordType: 'mime',
+          mediaType: 'text/vcard',
+          data: new TextEncoder().encode(vcard),
+        });
+      } else if (r.type === 'wifi') {
+        if (!r.wifiSsid) { log(`Record #${i+1}: WiFi SSID is required.`, 'err'); return; }
+        const auth = r.wifiAuth || 'WPA2';
+        if (auth !== 'OPEN' && !r.wifiPass) {
+          log(`Record #${i+1}: WiFi password required for ${auth}.`, 'err');
+          return;
+        }
+        if (auth !== 'OPEN' && r.wifiPass && (r.wifiPass.length < 8 || r.wifiPass.length > 63)) {
+          log(`Record #${i+1}: WPA password must be 8-63 chars.`, 'err');
+          return;
+        }
+        const wsc = buildWifiWSC(r.wifiSsid, r.wifiPass || '', auth);
+        ndefRecords.push({
+          recordType: 'mime',
+          mediaType: 'application/vnd.wfa.wsc',
+          data: wsc,
+        });
+      } else if (r.type === 'poster') {
+        if (!r.spUrl) { log(`Record #${i+1}: Smart Poster URL is required.`, 'err'); return; }
+        if (!/^https?:\/\//i.test(r.spUrl)) {
+          log(`Record #${i+1}: Smart Poster URL must start with http:// or https://`, 'err');
+          return;
+        }
+        const inner = [{ recordType: 'url', data: r.spUrl }];
+        if (r.spTitle) {
+          inner.push({ recordType: 'text', data: r.spTitle, lang: r.spLang || 'en' });
+        }
+        ndefRecords.push({
+          recordType: 'smart-poster',
+          data: { records: inner },
+        });
+      }
+    }
+
+    if (ndefRecords.length === 0) {
+      log('No records to write.', 'err');
+      return;
+    }
+
+    try {
+      const ndef = new NDEFReader();
+      writeAbortCtrl = new AbortController();
+      $('btnWrite').disabled = true;
+      $('btnWriteCancel').disabled = false;
+      $('writeScanIndicator').classList.remove('hidden');
+      log(`Writing ${ndefRecords.length} record(s)… present a tag.`, 'info');
+
+      await ndef.write(
+        { records: ndefRecords },
+        { signal: writeAbortCtrl.signal, overwrite: true }
+      );
+      log('Write successful.', 'ok');
+    } catch (err) {
+      handleNfcError(err, 'write');
+    } finally {
+      cleanupWrite();
+    }
+  }
+
+  function cancelWrite() {
+    if (writeAbortCtrl) {
+      writeAbortCtrl.abort();
+      log('Write cancelled.', 'info');
+    }
+    cleanupWrite();
+  }
+
+  function cleanupWrite() {
+    writeAbortCtrl = null;
+    $('btnWrite').disabled = false;
+    $('btnWriteCancel').disabled = true;
+    $('writeScanIndicator').classList.add('hidden');
+  }
+
+  // ----- ERASE -----
+  $('btnErase').addEventListener('click', eraseTag);
+  $('btnEraseCancel').addEventListener('click', cancelErase);
+
+  async function eraseTag() {
+    if (!confirm('Erase the next tag presented? This overwrites all NDEF data on it.')) return;
+    try {
+      const ndef = new NDEFReader();
+      eraseAbortCtrl = new AbortController();
+      $('btnErase').disabled = true;
+      $('btnEraseCancel').disabled = false;
+      $('eraseScanIndicator').classList.remove('hidden');
+      log('Awaiting tag to erase…', 'info');
+
+      // An empty NDEF message clears the tag's data.
+      await ndef.write(
+        { records: [{ recordType: 'empty' }] },
+        { signal: eraseAbortCtrl.signal, overwrite: true }
+      );
+      log('Tag erased.', 'ok');
+    } catch (err) {
+      handleNfcError(err, 'erase');
+    } finally {
+      cleanupErase();
+    }
+  }
+
+  function cancelErase() {
+    if (eraseAbortCtrl) {
+      eraseAbortCtrl.abort();
+      log('Erase cancelled.', 'info');
+    }
+    cleanupErase();
+  }
+
+  function cleanupErase() {
+    eraseAbortCtrl = null;
+    $('btnErase').disabled = false;
+    $('btnEraseCancel').disabled = true;
+    $('eraseScanIndicator').classList.add('hidden');
+  }
+
+  // ----- Error handling -----
+  function handleNfcError(err, ctx) {
+    if (err.name === 'AbortError') return; // user cancelled
+    const map = {
+      NotAllowedError: 'Permission denied. Enable NFC permission for this site.',
+      NotSupportedError: 'NFC not supported. Ensure NFC is enabled on device.',
+      NotReadableError: 'Tag could not be read. It may be empty or unsupported.',
+      NetworkError: 'Tag I/O failed (moved away, locked, or capacity exceeded).',
+      InvalidStateError: 'Another NFC operation is already in progress.',
+      SyntaxError: 'Invalid data in records.',
+      TypeError: 'Invalid record format.',
+      SecurityError: 'Blocked by browser security policy.',
+    };
+    const friendly = map[err.name] || err.message || 'Unknown error.';
+    log(`[${ctx}] ${err.name}: ${friendly}`, 'err');
+  }
+
+  // ----- Init -----
+  checkCapability();
+  renderRecords();
+})();
+</script>
+</body>
+</html>
